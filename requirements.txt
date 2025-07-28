@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+fastmcp
+sqlite-utils
+sqlalchemy
+requests
+streamlit
+python-dotenv
