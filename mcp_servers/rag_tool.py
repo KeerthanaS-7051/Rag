@@ -1,4 +1,3 @@
-# mcp_servers/rag_tool.py
 from typing import ClassVar
 from fastmcp.tools import Tool
 from pydantic import Field
@@ -27,19 +26,15 @@ class RAGTool(Tool):
 
     async def run(self, question: str) -> dict:
         try:
-            # ✅ Let LLaMA propose a SQL query
             sql_query = llama_generate_sql(question)
 
-            # ✅ Validate query before running
             if not validate_sql(sql_query):
-                return {"answer": "❌ Unsafe or invalid SQL generated."}
+                return {"answer": "Unsafe or invalid SQL generated."}
 
-            # ✅ Run the SQL safely
             raw_result = await self._sql_tool.run(sql=sql_query)
 
-            # ✅ Pass result + question to LLaMA for natural answer
             natural_answer = llama_rephrase(question, raw_result)
             return {"answer": natural_answer}
 
         except Exception as e:
-            return {"error": f"❌ RAGTool failed: {e}"}
+            return {"error": f"RAGTool failed: {e}"}
