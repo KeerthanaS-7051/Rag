@@ -33,4 +33,4 @@ class SQLTool(Tool):
             return {"columns": col_names, "rows": rows}
 
         except Exception as e:
-            return {"results": [], "error": fSQL execution failed: {e}"}
+            return {"results": [], "error": f"SQL execution failed: {e}"}
