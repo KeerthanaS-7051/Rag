@@ -4,17 +4,27 @@ import json
 
 TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")
 
-def llama_generate_sql(question: str) -> str:
+def llama_generate_sql(user_question: str, memory: list) -> str:
     try:
         prompt = f"""
-        You are an expert SQL assistant.
-        Convert the following natural language question into a SQL SELECT query.
-        The table name is employees, and columns are id, name, department, and salary.
-        
-        Question: {question}
-        
-        Only return the SQL query. Do not include explanations.
-        Ensure the query is safe and uses only SELECT.
+        You are a SQL expert for an employee database.
+
+        The database has a table called 'employees' with columns:
+        id (integer), name (text), department (text), salary (integer).
+
+        Use the following recent conversation for context:
+        {json.dumps(memory[-3:], indent=2) if memory else "No prior context."}
+
+        Task:
+        - Convert the user's question into a valid SQL SELECT query.
+        - Only output the SQL query, nothing else.
+        - Ensure the query is safe (no UPDATE, DELETE, INSERT, DROP).
+        - Example formats:
+            SELECT COUNT(name) FROM employees;
+            SELECT name FROM employees WHERE name LIKE '%e%';
+            SELECT department, AVG(salary) FROM employees GROUP BY department;
+
+        User question: {user_question}
         """
 
         response = requests.post(
@@ -23,32 +33,35 @@ def llama_generate_sql(question: str) -> str:
             json={
                 "model": "meta-llama/Meta-Llama-3-70B-Instruct-Turbo",
                 "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 200,
             },
             timeout=30,
         )
 
         if response.status_code == 200:
-            sql = response.json()["choices"][0]["message"]["content"].strip()
-            return sql if sql.lower().startswith("select") else "SELECT * FROM employees;"
-        return "SELECT * FROM employees;"
-    except:
-        return "SELECT * FROM employees;"
+            data = response.json()
+            sql_query = data["choices"][0]["message"]["content"].strip()
+            sql_query = sql_query.split("```sql")[-1].split("```")[0].strip()
+            return sql_query
 
-def llama_rephrase(user_question: str, sql_result: dict) -> str:
+        return "SELECT * FROM employees;"  # fallback safe query
+
+    except Exception as e:
+        return f"SELECT * FROM employees; -- fallback due to error: {e}"
+
+def llama_rephrase(user_question: str, sql_result: dict, memory: list) -> str:
     try:
         prompt = f"""
-        You are an assistant answering questions about an employee database.
+        You are a helpful assistant answering questions about an employee database.
 
         Question: {user_question}
-        SQL Result (JSON): {json.dumps(sql_result)}
+        SQL Result: {json.dumps(sql_result, indent=2)}
 
-        Instructions:
-        - If the result is a count, answer directly like: "There are 5 employees."
-        - If the result is a list of names, list them naturally.
-        - If the result is a full table (with multiple columns), format it nicely in text:
-          Example: "Here are the employees:\n1. Alice - HR - $70,000\n2. Bob - IT - $80,000"
-        - Do NOT just summarize vaguely. Use the actual rows.
-        - Respond in natural, conversational English.
+        Conversation so far:
+        {json.dumps(memory[-3:], indent=2) if memory else "No prior context."}
+
+        Please provide a clear, natural, and user-friendly response in full sentences.
+        If the result is a list or table, describe it neatly.
         """
 
         response = requests.post(
@@ -57,13 +70,15 @@ def llama_rephrase(user_question: str, sql_result: dict) -> str:
             json={
                 "model": "meta-llama/Meta-Llama-3-70B-Instruct-Turbo",
                 "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 300,
             },
-            timeout=40,
+            timeout=30,
         )
 
         if response.status_code == 200:
-            return response.json()["choices"][0]["message"]["content"].strip()
+            data = response.json()
+            return data["choices"][0]["message"]["content"].strip()
 
-        return f"API Error: {response.text}"
+        return "Sorry, I couldn’t generate a response."
     except Exception as e:
-        return f"Request failed: {e}"
+        return f"Error during rephrasing: {e}"
