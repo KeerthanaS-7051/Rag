@@ -12,7 +12,7 @@ def query_mcp(question: str):
         response = requests.post(
             "http://127.0.0.1:8000/call_tool",
             json={
-                "tool": "rag_query",   # always go through RAGTool
+                "tool": "rag_query",   
                 "args": {"question": question}
             },
             timeout=30,
