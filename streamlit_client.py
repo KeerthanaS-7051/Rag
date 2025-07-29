@@ -1,4 +1,3 @@
-# streamlit_client.py
 import streamlit as st
 import requests
 
@@ -9,7 +8,6 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 def query_mcp(question: str):
-    """Send question to MCP server and return a natural language answer."""
     try:
         response = requests.post(
             "http://127.0.0.1:8000/call_tool",
@@ -23,20 +21,18 @@ def query_mcp(question: str):
             data = response.json()
             output = data.get("output", {})
 
-            # ✅ Prefer natural answer
             if isinstance(output, dict):
-                return output.get("answer", "⚠️ No answer found.")
+                return output.get("answer", "No answer found.")
             elif isinstance(output, str):
                 return output
             else:
                 return str(output)
 
-        return f"⚠️ Server returned {response.status_code}: {response.text}"
+        return f"Server returned {response.status_code}: {response.text}"
 
     except Exception as e:
-        return f"⚠️ Connection error: {e}"
+        return f"Connection error: {e}"
 
-# Chat input
 user_input = st.chat_input("Ask a question about employees")
 
 if user_input:
