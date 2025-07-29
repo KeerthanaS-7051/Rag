@@ -45,7 +45,7 @@ for msg in st.session_state.messages:
     role = "user" if msg["role"] == "user" else "assistant"
     content = msg["content"]
 
-    if "|" in content and "---" in content:  # crude check for markdown table
+    if "|" in content and "---" in content:  
         st.chat_message(role).markdown(content)
     else:
         st.chat_message(role).write(content)
