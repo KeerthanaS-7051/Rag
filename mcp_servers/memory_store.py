@@ -1,5 +1,3 @@
-# mcp_servers/memory_store.py
-
 _store = {}
 
 def save_turn(session_id: str, question: str, answer: str):
@@ -13,7 +11,6 @@ def save_turn(session_id: str, question: str, answer: str):
 def get_history(session_id: str):
     return _store.get(session_id, [])
 
-# Singleton object to import
 class MemoryStore:
     def save_turn(self, session_id, question, answer):
         save_turn(session_id, question, answer)
