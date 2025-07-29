@@ -18,7 +18,7 @@ class SQLTool(Tool):
 
     async def run(self, sql: str) -> dict:
         if not validate_sql(sql):
-            return {"results": [], "error": "❌ Unsafe query detected. Only SELECT is allowed."}
+            return {"results": [], "error": "Unsafe query detected. Only SELECT is allowed."}
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
@@ -28,9 +28,9 @@ class SQLTool(Tool):
             conn.close()
 
             if not rows:
-                return {"results": [], "message": "⚠️ No results found."}
+                return {"results": [], "message": "No results found."}
 
             return {"columns": col_names, "rows": rows}
 
         except Exception as e:
-            return {"results": [], "error": f"❌ SQL execution failed: {e}"}
+            return {"results": [], "error": fSQL execution failed: {e}"}
