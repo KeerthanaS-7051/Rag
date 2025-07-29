@@ -33,6 +33,6 @@ def llama_rephrase(user_question: str, sql_result: dict) -> str:
             data = response.json()
             return data["choices"][0]["message"]["content"].strip()
 
-        return f"⚠️ API Error: {response.text}"
+        return f"API Error: {response.text}"
     except Exception as e:
-        return f"⚠️ Request failed: {e}"
+        return f"Request failed: {e}"
